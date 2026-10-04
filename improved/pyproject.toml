@@ -1,0 +1,8 @@
+[project]
+name = "mcp-starter-improved"
+version = "0.1.0"
+description = "MCP 입문 학습용 hello 서버 (개선 버전)"
+requires-python = ">=3.10"
+dependencies = [
+    "mcp==2.2.0",
+]
