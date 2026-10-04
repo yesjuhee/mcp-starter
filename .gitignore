@@ -1,2 +1,3 @@
 .claude/progress.json
 notes/
+__pycache__/

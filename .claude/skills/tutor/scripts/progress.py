@@ -45,14 +45,38 @@ ROOT = Path(os.environ.get("CLAUDE_PROJECT_DIR") or Path(__file__).resolve().par
 STATE_PATH = ROOT / ".claude" / "progress.json"
 
 
+OBSERVE = os.environ.get("MCP_STARTER_OBSERVE") == "1"
+
+
+class StateError(Exception):
+    """상태 파일이 손상돼 읽을 수 없음."""
+
+
 def load() -> dict:
     if not STATE_PATH.exists():
         return {"steps": {}}
-    return json.loads(STATE_PATH.read_text(encoding="utf-8"))
+    try:
+        state = json.loads(STATE_PATH.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as error:
+        raise StateError(str(error)) from error
+    if not isinstance(state, dict) or not isinstance(state.get("steps"), dict):
+        raise StateError("steps 항목이 없거나 형식이 다릅니다")
+    if not isinstance(state.get("questions", []), list):
+        raise StateError("questions 항목의 형식이 다릅니다")
+    return state
 
 
 def save(state: dict) -> None:
-    STATE_PATH.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
+    """임시 파일에 쓴 뒤 교체한다. 쓰는 도중 끊겨도 기존 파일이 깨지지 않는다."""
+    STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    temp = STATE_PATH.with_name(STATE_PATH.name + ".tmp")
+    temp.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
+    os.replace(temp, STATE_PATH)
+
+
+def broken_message(reason: str) -> str:
+    return (f"진행 상태 파일이 손상돼 읽을 수 없습니다: {STATE_PATH} ({reason}). "
+            "자동으로 고치거나 초기화하지 않습니다. 파일 내용을 확인하고, 처음부터 다시 하려면 직접 지워주세요.")
 
 
 def now() -> str:
@@ -207,16 +231,25 @@ def command_session_context(state: dict) -> None:
 def touches_improved(tool_input: dict) -> bool:
     for key in ("file_path", "path", "pattern", "glob", "command", "notebook_path"):
         value = tool_input.get(key)
-        if isinstance(value, str) and re.search(r"(^|[/\\\s'\"])improved([/\\\s'\"]|$)", value.replace("\\", "/")):
+        if isinstance(value, str) and re.search(r"(^|[/\\\s'\"();&|])improved([/\\\s'\"();&|]|$)", value.replace("\\", "/")):
             return True
     return False
 
 
-def command_guard(state: dict) -> None:
+def deny(reason: str) -> None:
+    print(json.dumps({"hookSpecificOutput": {"hookEventName": "PreToolUse",
+                                             "permissionDecision": "deny",
+                                             "permissionDecisionReason": reason}}, ensure_ascii=False))
+
+
+def command_guard(state: dict | None, broken: str | None = None) -> None:
     payload = json.load(sys.stdin)
-    if reached(state, UNLOCK_IMPROVED_AT):
-        return
     if not touches_improved(payload.get("tool_input", {})):
+        return
+    if broken is not None:
+        deny("진행 상태 파일이 손상돼 지금이 몇 단계인지 확인할 수 없어 improved/ 접근을 막았습니다. " + broken_message(broken))
+        return
+    if reached(state, UNLOCK_IMPROVED_AT):
         return
     print(json.dumps({
         "hookSpecificOutput": {
@@ -231,12 +264,30 @@ def command_guard(state: dict) -> None:
     }, ensure_ascii=False))
 
 
+WRITE_COMMANDS = {"start", "complete", "skip", "question"}
+
+
 def main() -> None:
     if len(sys.argv) < 2:
         print(__doc__)
         return
-    state = load()
     command = sys.argv[1]
+    if OBSERVE and command in WRITE_COMMANDS:
+        fail("관찰용 세션(MCP_STARTER_OBSERVE=1)에서는 진행 상태를 바꾸지 않습니다.")
+    if OBSERVE and command == "session-context":
+        print("[MCP 입문 학습 세트] 이 세션은 관찰용입니다(MCP_STARTER_OBSERVE=1). "
+              "tutor 스킬로 학습을 진행하지 말고, 학습자의 질문에만 평소처럼 답하세요. 진행 상태를 바꾸는 명령은 거부됩니다.")
+        return
+    try:
+        state = load()
+    except StateError as error:
+        if command == "guard":
+            command_guard(None, broken=str(error))
+        elif command == "session-context":
+            print("[MCP 입문 학습 세트] " + broken_message(str(error)))
+        else:
+            fail(broken_message(str(error)))
+        return
     if command == "status":
         print(describe(state))
     elif command in ("start", "complete", "skip"):

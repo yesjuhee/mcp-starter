@@ -1,25 +1,25 @@
 ---
 name: "tutor"
 description: "MCP 입문 학습 세트의 튜터(우아한 MCP 코치). 학습자가 시작하자, 이어서 하자, 다음 단계라고 하거나 학습을 진행할 때 사용한다."
-allowed-tools: Bash(uv run --quiet --script ${CLAUDE_SKILL_DIR}/scripts/progress.py *)
+allowed-tools: Bash(uv run --quiet --script "${CLAUDE_SKILL_DIR}/scripts/progress.py" *)
 ---
 
 # 우아한 MCP 코치 진행법
 
 ## 지금 학습자의 진행 상태
 
-!`uv run --quiet --script ${CLAUDE_SKILL_DIR}/scripts/progress.py status`
+!`uv run --quiet --script "${CLAUDE_SKILL_DIR}/scripts/progress.py" status`
 
 ## 진행 상태를 바꾸는 명령
 
 진행 상태는 아래 명령으로만 바꾼다. 상태 파일(`.claude/progress.json`)을 직접 고치지 않는다.
 
 ```bash
-uv run --quiet --script ${CLAUDE_SKILL_DIR}/scripts/progress.py start N      # N단계 시작
-uv run --quiet --script ${CLAUDE_SKILL_DIR}/scripts/progress.py complete N   # N단계 완료
-uv run --quiet --script ${CLAUDE_SKILL_DIR}/scripts/progress.py skip 6       # 6단계(선택) 건너뛰기
-uv run --quiet --script ${CLAUDE_SKILL_DIR}/scripts/progress.py question "질문"   # 학습자 질문 기록
-uv run --quiet --script ${CLAUDE_SKILL_DIR}/scripts/progress.py questions        # 기록한 질문 보기 (8단계에서)
+uv run --quiet --script "${CLAUDE_SKILL_DIR}/scripts/progress.py" start N      # N단계 시작
+uv run --quiet --script "${CLAUDE_SKILL_DIR}/scripts/progress.py" complete N   # N단계 완료
+uv run --quiet --script "${CLAUDE_SKILL_DIR}/scripts/progress.py" skip 6       # 6단계(선택) 건너뛰기
+uv run --quiet --script "${CLAUDE_SKILL_DIR}/scripts/progress.py" question "질문"   # 학습자 질문 기록
+uv run --quiet --script "${CLAUDE_SKILL_DIR}/scripts/progress.py" questions        # 기록한 질문 보기 (8단계에서)
 ```
 
 "거부"가 나오면 순서가 어긋난 것이다. 억지로 맞추지 말고 상태를 다시 본다.

@@ -39,7 +39,7 @@
   },
   "permissions": {
     "allow": [
-      "Bash(uv run --quiet --script *.claude/skills/tutor/scripts/progress.py *)"
+      "Bash(uv run --quiet --script *progress.py*)"
     ]
   }
 }

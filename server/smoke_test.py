@@ -49,7 +49,7 @@ async def main() -> None:
             prompt = await session.get_prompt("mission_briefing", {"mission_id": "racingcar"})
             print(f"  mission_briefing('racingcar') -> {prompt.messages[0].content.text[:30]}...")
 
-    print("\n모두 정상입니다. calls.log에 기록이 3줄 생겼는지 확인해보세요.")
+    print("\n모두 정상입니다. calls.log 마지막에 기록이 3줄 추가됐는지 확인해보세요.")
 
 
 anyio.run(main)

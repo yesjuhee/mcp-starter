@@ -36,18 +36,12 @@ MCP 서버를 한 번도 만들어본 적 없는 개발자를 위한 학습 세�
 
 ## 시작하기
 
-### 1. uv 설치
+> 현재 macOS 기준으로 확인한 학습 세트입니다.
 
-**macOS**
+### 1. uv 설치
 
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
-```
-
-**Windows** (PowerShell)
-
-```powershell
-powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
 
 설치가 끝나면 **터미널을 새로 열고** `uv --version`으로 확인합니다.
@@ -62,7 +56,7 @@ uv run smoke_test.py
 처음 실행할 때 Python과 필요한 패키지가 자동으로 설치됩니다. 마지막에 아래 문장이 보이면 성공입니다.
 
 ```
-모두 정상입니다. calls.log에 기록이 3줄 생겼는지 확인해보세요.
+모두 정상입니다. calls.log 마지막에 기록이 3줄 추가됐는지 확인해보세요.
 ```
 
 ### 3. AI 튜터와 시작
@@ -121,7 +115,7 @@ mcp-starter/
 이 폴더에서 Claude Code를 처음 열면, 폴더를 신뢰할지 묻습니다. 신뢰하면 `.claude/settings.json`에 있는 훅 두 개가 동작합니다.
 
 - **세션 시작 훅**: 세션을 다시 열었을 때 어디까지 진행했는지 튜터에게 알려줍니다.
-- **도구 사용 전 훅**: 7단계 전에는 튜터(AI)가 `improved/` 폴더를 열지 못하게 막습니다. 학습자가 직접 여는 것은 막지 않습니다.
+- **도구 사용 전 훅**: 7단계 전에는 튜터(AI)가 `improved/` 폴더를 직접 여는 것을 일부 제한합니다. 완전한 차단은 아니고, 학습자가 직접 여는 것은 막지 않습니다.
 
 두 훅 모두 `.claude/skills/tutor/scripts/progress.py`를 실행합니다. 진행 기록과 학습 중 남긴 질문은 `.claude/progress.json`에만 저장되고, 외부로 아무것도 보내지 않습니다.
 
@@ -129,3 +123,4 @@ mcp-starter/
 
 - [MCP Specification 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28) (최신판은 [`latest`](https://modelcontextprotocol.io/specification/latest))
 - [MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk) (이 학습 세트는 `mcp` 2.2.0 기준)
+- 개념 설명은 2026-07-28 스펙을 기준으로 하지만, 이 예제의 실제 통신 버전은 다를 수 있습니다 (smoke test에 표시되는 프로토콜 버전)
