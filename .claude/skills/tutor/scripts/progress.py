@@ -59,11 +59,69 @@ def load() -> dict:
         state = json.loads(STATE_PATH.read_text(encoding="utf-8"))
     except (OSError, ValueError) as error:
         raise StateError(str(error)) from error
+    validate(state)
+    return state
+
+
+def is_time(value) -> bool:
+    if not isinstance(value, str):
+        return False
+    try:
+        datetime.fromisoformat(value)
+    except ValueError:
+        return False
+    return True
+
+
+def validate(state) -> None:
+    """이 스크립트가 만들 수 있는 형태인지 검사한다. 아니면 StateError."""
     if not isinstance(state, dict) or not isinstance(state.get("steps"), dict):
         raise StateError("steps 항목이 없거나 형식이 다릅니다")
-    if not isinstance(state.get("questions", []), list):
+    if set(state) - {"steps", "questions"}:
+        raise StateError(f"알 수 없는 항목이 있습니다: {sorted(set(state) - {'steps', 'questions'})}")
+
+    numbers = []
+    for key, record in state["steps"].items():
+        if not key.isdigit() or int(key) not in STEPS:
+            raise StateError(f"단계 번호가 올바르지 않습니다: {key!r}")
+        where = f"{key}단계 기록"
+        if not isinstance(record, dict) or not record:
+            raise StateError(f"{where}이 비었거나 형식이 다릅니다")
+        if set(record) - {"start", "end", "skipped"}:
+            raise StateError(f"{where}에 알 수 없는 필드가 있습니다: {sorted(set(record) - {'start', 'end', 'skipped'})}")
+        if "skipped" in record:
+            if record["skipped"] is not True or int(key) not in SKIPPABLE or "end" in record:
+                raise StateError(f"{where}의 건너뛰기 표시가 올바르지 않습니다")
+        elif "start" not in record:
+            raise StateError(f"{where}에 시작 시각이 없습니다")
+        for field in ("start", "end"):
+            if field in record and not is_time(record[field]):
+                raise StateError(f"{where}의 {field} 시각 형식이 다릅니다")
+        if "end" in record and record["end"] < record["start"]:
+            raise StateError(f"{where}의 완료 시각이 시작보다 앞섭니다")
+        numbers.append(int(key))
+
+    numbers.sort()
+    if numbers != list(range(len(numbers))):
+        raise StateError(f"단계 기록이 0단계부터 이어지지 않습니다: {numbers}")
+    for number in numbers[:-1]:
+        if not is_done(state["steps"][str(number)]):
+            raise StateError(f"{number}단계가 끝나지 않았는데 다음 단계 기록이 있습니다")
+
+    questions = state.get("questions", [])
+    if not isinstance(questions, list):
         raise StateError("questions 항목의 형식이 다릅니다")
-    return state
+    for index, question in enumerate(questions):
+        where = f"질문 기록 {index + 1}번"
+        if not isinstance(question, dict) or set(question) != {"step", "text", "at"}:
+            raise StateError(f"{where}의 형식이 다릅니다")
+        step = question["step"]
+        if step is not None and (isinstance(step, bool) or not isinstance(step, int) or step not in STEPS):
+            raise StateError(f"{where}의 단계 번호가 올바르지 않습니다")
+        if not isinstance(question["text"], str) or not question["text"].strip():
+            raise StateError(f"{where}의 내용이 비었거나 형식이 다릅니다")
+        if not is_time(question["at"]):
+            raise StateError(f"{where}의 시각 형식이 다릅니다")
 
 
 def save(state: dict) -> None:
