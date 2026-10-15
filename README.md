@@ -8,6 +8,12 @@ MCP 서버를 한 번도 만들어본 적 없는 개발자를 위한 학습 세�
 > **이 학습의 핵심은 여러분의 질문입니다.** 이상하거나 궁금한 게 생기면 그때그때 코치에게 물어보세요. 주제에서 벗어나도 괜찮습니다.
 > 학습이 끝나면 오늘 배운 것과 내가 했던 질문을 담은 **학습 노트**가 한 장 남습니다.
 
+> [!IMPORTANT]
+> **지원 범위: macOS + Claude Code**
+> 이 학습 세트는 macOS에서 Claude Code로 진행하는 것을 기준으로 확인했습니다. Claude Desktop 비교 단계는 선택입니다.
+> 튜터가 Claude Code의 스킬·훅·화면을 사용하기 때문에, **Codex나 Windows에서 그대로 진행하는 것은 현재 지원하지 않습니다.**
+> Codex·Windows용 안내와 학습 흐름은 추후 여력이 될 때 확장할 예정입니다. PR로 기여해주실 분이 있다면 환영합니다.
+
 ## 이 학습을 마치면
 
 - MCP 서버가 제공하는 세 가지 기능(**Tool, Resource, Prompt**)이 무엇이고 어떻게 다른지 설명할 수 있습니다.
@@ -36,17 +42,35 @@ MCP 서버를 한 번도 만들어본 적 없는 개발자를 위한 학습 세�
 
 ## 시작하기
 
-> 현재 macOS 기준으로 확인한 학습 세트입니다.
+### 1. 저장소 받기
 
-### 1. uv 설치
+```bash
+git clone https://github.com/yesjuhee/mcp-starter.git
+cd mcp-starter
+```
+
+이후 명령은 모두 이 `mcp-starter/` 폴더에서 시작합니다.
+
+### 2. uv 설치
 
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-설치가 끝나면 **터미널을 새로 열고** `uv --version`으로 확인합니다.
+설치가 끝나면 **터미널을 새로 열고** `mcp-starter/` 폴더로 돌아와 `uv --version`으로 확인합니다.
 
-### 2. 서버가 동작하는지 확인
+`command not found: uv`가 나오면, 설치 마지막에 출력된 환경 적용 명령을 그대로 실행합니다. 기본 설치 위치(`~/.local/bin`)라면 이렇습니다.
+
+```bash
+source "$HOME/.local/bin/env"
+uv --version
+```
+
+새 터미널에서도 계속 실패하면 설치 출력에 나온 설치 위치가 `PATH`에 들어 있는지, 셸 설정 파일(`~/.zshrc` 등)을 확인해보세요.
+
+### 3. 서버가 동작하는지 확인
+
+`mcp-starter/` 폴더에서 실행합니다.
 
 ```bash
 cd server
@@ -59,9 +83,9 @@ uv run smoke_test.py
 모두 정상입니다. calls.log 마지막에 기록이 3줄 추가됐는지 확인해보세요.
 ```
 
-### 3. AI 튜터와 시작
+### 4. AI 튜터와 시작
 
-이 폴더(`mcp-starter/`)로 돌아와서 Claude Code를 실행하고, 이렇게 말하면 됩니다.
+`server/`에서 레포 루트(`mcp-starter/`)로 돌아와 Claude Code를 실행하고, 이렇게 말하면 됩니다.
 
 ```bash
 cd ..
